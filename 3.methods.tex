@@ -1,7 +1,7 @@
 \subsection{Overview}
 
 We first review generalized parsimony as it applies to a single gene tree
-\cite{Sankoff_1975, Sankoff_Rousseau_1975}. For each node $u$ we maintain
+\citep{Sankoff_1975, Sankoff_Rousseau_1975}. For each node $u$ we maintain
 three cost functions. The \textit{node cost} function $g_u(x)$ assigns a cost 
 to each geographic state $x$ that gives the minimum cost required to explain 
 the observed geographic states of all sample nodes whose most recent common 
@@ -47,7 +47,7 @@ minimum cost ancestor location assignments produced by a parsimony
 reconstruction can be viewed as a maximum posterior probability reconstruction 
 when the cost function $\Delta_u$ is proportional to the negative logarithm of 
 the lineage transition probability of a stochastic dispersal process 
-\cite{Maddison_1991}.
+\citep{Maddison_1991}.
 
 %Alternatively, if we are not interested in only the most parsimonious histories 
 %we could instead choose a state for node $u$ with probability 
@@ -56,7 +56,7 @@ the lineage transition probability of a stochastic dispersal process
 \subsection{Algorithm}
 
 In this section we describe how we use the succinct tree sequence encoding
-\cite{Kelleher_etal_2016} to efficiently compute node cost and stem cost 
+\citep{Kelleher_etal_2016} to efficiently compute node cost and stem cost 
 functions for each marginal genealogy. Under the coalescent with recombination 
 nearby gene trees are highly correlated. Moving between adjacent marginal trees 
 requires only a small number of subtree-prune-and-regraft (SPR) operations. By 
@@ -66,7 +66,7 @@ efficiently maintain the state of parsimony calculations as we iterate over the
 marginal genealogies.
 
 A detailed description of the tree sequence data structure can be found in
-\cite{Kelleher_etal_2016}. For our purposes it suffices to know that
+\citet{Kelleher_etal_2016}. For our purposes it suffices to know that
 relationships among all $N$ nodes in the tree sequence are recorded in the edge 
 table $E$. Each row in the edge table records an ancestor-descendant
 relationship, and the indices of nodes involved in that relationship can be 
@@ -76,7 +76,7 @@ encoded by an edge applies to the half-open genomic between $E[k].\texttt{left}$
 from left to right, the index vectors $I$ and $O$ give the insertion and
 removal order of the edges needed to build each marginal gene tree topology 
 (recorded in the vector $\pi$). The following algorithm is a modification of
-the branch statistic algorithm that appears in \cite{Ralph_etal_2020}.
+the branch statistic algorithm that appears in \citep{Ralph_etal_2020}.
 
 \begin{description}
 
@@ -231,18 +231,18 @@ geographic state space.
 For a continuous state space we use the squared Euclidean distance as the 
 transition cost, which leads to node, stem, and final costs that are quadratic 
 functions of the spatial locations. The parameters of these functions can be 
-computed in constant time as we traverse each genealogy \cite{Maddison_1991}.
+computed in constant time as we traverse each genealogy \citep{Maddison_1991}.
 
 For a finite set of geographic locations we require a matrix specifying the 
 cost of transitions between all pairs of geographic states. In that case, the
 node, stem, and final costs are discrete functions on the set of geographic
 locations, and computing their values scales with the square of the number of
-geographic locations \cite{Clemente_etal_2009}.
+geographic locations \citep{Clemente_etal_2009}.
 
 \subsection{Simulation study}
 
 We tested performance of the method using spatially explicit forward-time 
-simulations with the software SLiM \cite{Haller_Messer_2019}. For each set of 
+simulations with the software SLiM \citep{Haller_Messer_2019}. For each set of 
 simulations described below we evaluated the ability of genome-wide parsimony 
 averages to accurately estimate migration rates and the locations of genetic 
 ancestors.

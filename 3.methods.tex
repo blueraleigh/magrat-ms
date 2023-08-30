@@ -24,11 +24,7 @@ where $\tau_u$ is the length of the branch leading to node $u$ and $\Delta$ is
 a time-independent transition cost function. Typical choices for the
 time-dependent component are $\phi(\tau_u) = \frac{1}{\tau_u}$ or 
 $\phi(\tau_u) = 1$, the latter making the whole cost function independent of
-branch lengths. We note that the minimum cost ancestor location assignments
-produced by a parsimony reconstruction can be viewed as a maximum posterior
-probability reconstruction when the cost function $\Delta_u$ is proportional 
-to the negative logarithm of the lineage transition probability of a stochastic
-dispersal process \cite{Maddison_1991}.
+branch lengths.
 
 The node cost and stem cost functions can be computed in a single post-order
 tree traversal. A second pre-order tree traversal can then be used to compute
@@ -44,12 +40,18 @@ where $\pi_u$ represents the immediate ancestor of node $u$.
 To sample a most parsimonious dispersal history we first choose a state at the
 root of the tree that minimizes the final cost function. We then recurse through 
 the tree in a pre-order traversal and for each node $u$ we choose a state
-$x_u = \min_x \bigl[\Delta_u(x_{\pi_u}, x) + g_u(x)\bigr]$. Depending on the
+$x_u = \arg\min_x \bigl[\Delta_u(x_{\pi_u}, x) + g_u(x)\bigr]$. Depending on the
 nature of the geographic state space and cost function there may be multiple
-(sometimes many) most parsimonious dispersal histories. Alternatively, if we
-are not interested in only the most parsimonious histories we could instead 
-choose a state for node $u$ with probability 
-$\mathbb{P}(X_u = x | X_{\pi_u} = x_{\pi_u}) \propto \exp{\bigl[-\Delta_u(x_{\pi_u}, x) - g_u(x)\bigr]}$.
+(sometimes many) most parsimonious dispersal histories. We note that the 
+minimum cost ancestor location assignments produced by a parsimony 
+reconstruction can be viewed as a maximum posterior probability reconstruction 
+when the cost function $\Delta_u$ is proportional to the negative logarithm of 
+the lineage transition probability of a stochastic dispersal process 
+\cite{Maddison_1991}.
+
+%Alternatively, if we are not interested in only the most parsimonious histories 
+%we could instead choose a state for node $u$ with probability 
+%$\mathbb{P}(X_u = x | X_{\pi_u} = x_{\pi_u}) \propto \exp{\bigl[-\Delta_u(x_{\pi_u}, x) - g_u(x)\bigr]}$.
 
 \subsection{Algorithm}
 
@@ -65,13 +67,13 @@ marginal genealogies.
 
 A detailed description of the tree sequence data structure can be found in
 \cite{Kelleher_etal_2016}. For our purposes it suffices to know that
-relationships among nodes are recorded in the edge table $E$. Each row in the
-edge table records an ancestor-descendant relationship, and the indices of nodes
-involved in that relationship can be accessed as $E[k].\texttt{parent}$ and 
-$E[k].\texttt{child}$. The relationship encoded by an edge applies to the
-half-open genomic between $E[k].\texttt{left}$ (inclusive) and
-$E[k].\texttt{right}$ (exclusive). As we move along the genome from left to
-right, the index vectors $I$ and $O$ give the insertion and
+relationships among all $N$ nodes in the tree sequence are recorded in the edge 
+table $E$. Each row in the edge table records an ancestor-descendant
+relationship, and the indices of nodes involved in that relationship can be 
+accessed as $E[k].\texttt{parent}$ and  $E[k].\texttt{child}$. The relationship 
+encoded by an edge applies to the half-open genomic between $E[k].\texttt{left}$ 
+(inclusive) and $E[k].\texttt{right}$ (exclusive). As we move along the genome 
+from left to right, the index vectors $I$ and $O$ give the insertion and
 removal order of the edges needed to build each marginal gene tree topology 
 (recorded in the vector $\pi$). The following algorithm is a modification of
 the branch statistic algorithm that appears in \cite{Ralph_etal_2020}.
@@ -79,7 +81,7 @@ the branch statistic algorithm that appears in \cite{Ralph_etal_2020}.
 \begin{description}
 
 \item[S1.] [Initialization.]
-    For $0 \leq u < |N|$
+    For $0 \leq u < N$
         set $\pi_u \leftarrow -1$,
         $s_u \leftarrow 0$,
         $g_u(x) \leftarrow 0$,
@@ -88,7 +90,7 @@ the branch statistic algorithm that appears in \cite{Ralph_etal_2020}.
         $F_u(x) \leftarrow 0$.
         Then,
         if $u$ is a sample node and $x \neq x_u$,
-            set $g_u(x) \leftarrow G_u(x) \leftarrow \infty$.
+            set $g_u(x) \leftarrow \infty$.
     Finally,
         set $j \leftarrow k \leftarrow 0$ and set $t_l \leftarrow 0$.
 
@@ -179,7 +181,46 @@ the branch statistic algorithm that appears in \cite{Ralph_etal_2020}.
 
 \end{description}
 
-Go into an explanation of the algorithm here.
+We begin in S1 by initializing the cost functions for each node to zero except in
+the case of sample nodes, where we set them to positive infinity for all states
+not equal to the observed state. We then set the parent of each node to minus
+one (signifying the null element) so that the initial state of the tree sequence
+is a forest of disconnected nodes. The average cost functions (denoted by the
+corresponding capital letters) are also initialized to zero as these will be
+updated as we iterate over the tree sequence.
+
+The meat of the algorithm occurs in steps S4 and S5 of the edge removal loop
+and in steps S8 and S9 of the edge insertion loop. Removal of an edge from
+node $u$ to $v$ will alter the node and stem cost functions along the path from
+$u$ back to the root of the genealogy. Step S4 prepares for this by first
+substracting the stem costs of $u$ and $v$ from the node costs of their
+respective parents. In step S5, we walk back along the path from $u$'s parent to
+the root and recompute new stem costs and node costs given the updated node
+costs at the head of the path. Insertion of an edge from node $u$ to $v$ will 
+similarly alter the node and stem cost functions along the path from
+$u$ back to the root of the genealogy. Step S7 prepares for this by first
+substracting the stem cost of $u$ from the node cost of its parent and then
+computing the stem cost of $v$ and adding it to the node cost of $u$. In step 
+S8, we walk back along the path from $u$'s parent to the root as before and 
+recompute new stem costs and node costs given the updated node costs at the 
+head of the path.
+
+Upon reaching step S9 we have finished constructing the tree together with its
+node cost and stem cost functions. We record the genomic span of the tree in the 
+variable $s$, which will be the weight applied to the current tree in the weighted
+average. In S10 we perform a preorder traversal of the newly constructed tree
+and compute the final cost function for each node. At the same time, we 
+increment the total weight $s_u$ of each node by $s$ and update the weighted 
+averages $G_u(x)$, $H_u(x)$, $F_u(x)$ with the cost functions for the current 
+tree.
+
+Correctness of the algorithm requires that edges are removed in order of 
+nondecreasing right genomic coordinate and decreasing time and that edges are
+inserted in order of nondecreasing left genomic coordinate and increasing time
+(time is measured backward from the present). We assume that the index vectors
+$I$ and $O$ are constructed to satisfy these conditions, and these assumptions 
+form the basis of the conditional checks in steps S3 and S6 for determining
+when to exit the edge removal and insertion loops.
 
 \subsection{Implementation}
 
@@ -187,19 +228,23 @@ Implementation of the generalized parsimony algorithm detailed above depends on
 a choice of cost function $\Delta$, which in turn depends on the nature of the
 geographic state space.
 
-For a continuous two-dimensional state space we use the squared Euclidean
-distance as the transition cost, which leads to node, stem, and final
-costs that are quadratic functions of the spatial locations. The parameters
-of these functions can be computed in constant time as we traverse each
-genealogy \cite{Maddison_1991}.
+For a continuous state space we use the squared Euclidean distance as the 
+transition cost, which leads to node, stem, and final costs that are quadratic 
+functions of the spatial locations. The parameters of these functions can be 
+computed in constant time as we traverse each genealogy \cite{Maddison_1991}.
 
 For a finite set of geographic locations we require a matrix specifying the 
 cost of transitions between all pairs of geographic states. In that case, the
 node, stem, and final costs are discrete functions on the set of geographic
 locations, and computing their values scales with the square of the number of
-geographic locations. 
+geographic locations \cite{Clemente_etal_2009}.
 
+\subsection{Simulation study}
 
-
+We tested performance of the method using spatially explicit forward-time 
+simulations with the software SLiM \cite{Haller_Messer_2019}. For each set of 
+simulations described below we evaluated the ability of genome-wide parsimony 
+averages to accurately estimate migration rates and the locations of genetic 
+ancestors.
 
 

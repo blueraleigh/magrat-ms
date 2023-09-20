@@ -1,0 +1,62 @@
+We described a method for estimating locations of genetic ancestors from 
+genome-wide genealogies. The method is based on minimizing the overall number 
+of migration events (or overall migration distance) necessary to explain the 
+geographic distribution of sampled genomes, optionally including information 
+from genealogy branch lengths in the optimization. Simulations indicate that 
+the method achieves reasonable accuracy over short and moderate timescales, and 
+an analysis of contemporary human genomes demonstrates that the method recovers 
+broad patterns in the history of human migration out of Africa and across Asia 
+and Europe.
+
+\subsection{Relation to existing work}
+
+Several existing approaches to geographic inference with tree sequences merit 
+discussion in relation to our own work. \citet{Wohns_etal_2022} introduced a
+nonparametric approach that estimates ancestor locations by successively
+averaging the coordinates of sample locations in a postorder traversal of the
+ARG to their most recent common ancestor. The resulting estimates are local 
+estimates in the sense that the inferred location of an ancestor depends only 
+on the locations of samples that trace some portion of their ancestry to that 
+ancestor and on the topology of the corresponding subset of the ARG. By contrast,
+our approach estimates the location of an ancestor using information from all
+samples. Because all samples share common ancestry at some time in the past, 
+even those samples that are not direct descendants of an ancestor can be 
+informative about that ancestor's location.
+
+\citet{Osmond_Coop_2021} describe a likelihood method for locating genetic
+ancestors and estimating migration rates that is based on a model of branching
+Brownian motion. Their approach also uses information from all samples to
+estimate ancestral locations and can optionally estimate separate migration
+rates for deep and shallow time horizons. Unlike our method, inference is 
+carried out on a sample of widely spaced genealogies rather than on the full 
+tree sequence. We note that when squared Euclidean distance weighted by inverse 
+branch length is used as the transition cost function, the maximum parsimony 
+reconstruction on each marginal genealogy has highest posterior probability 
+under a Brownian motion dispersal process. In this sense, the genome-wide 
+average reconstruction produced by our method can be viewed as a weighted 
+average of posterior modes.
+
+% maybe a section here about branch lengths: to use or not to use?
+
+% another section about distinguishing between ongoing migration vs historical
+% association?
+
+\subsection{Limitations}
+
+We note that the approach we have described assumes that lineages disperse
+independently of one another and that the dispersal process is independent of
+the coalescent process between coalescent events in a reconstructed gene tree. 
+That is, a reconstruction depends only the transition cost function and on the 
+topology (and possibly branch lengths) of a genealogy. Moreover, the parsimony 
+algorithm can enumerate only a small subset of migration histories that may 
+actually have occurred. For these reasons, we expect migration rate estimates 
+based on parsimony statistics to be biased, especially in scenarios where 
+migration is high. Finally, all methods of inference will depend on our
+ability to accurately estimate the marginal genealogies in the tree
+sequence. To the extent that errors in gene tree inference are random with
+respect to the geographic distribution of the samples, they should lead to
+higher migration rate estimates and increased uncertainty in the geographic
+placement of ancestors.
+
+
+

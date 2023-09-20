@@ -1,0 +1,39 @@
+\subsection{Simulations}
+
+Across all simulations, roughly 7 percent of marginal genealogies failed to
+coalesce completely resulting in some marginal genealogies having two or (rarely)
+three roots. Because our method works with multi-rooted genealogies we did
+not recapitate these gene trees.
+
+The migration rate statistic $\sigma_P$ showed a tendency to underestimate the
+true migration rate for all simulations (Figs. \ref{fig:gauss-kernel-rate-estimates}, 
+\ref{fig:lapl-kernel-rate-estimates}). The magnitude of downward bias 
+increased with increasing migration and was more pronounced under the Laplace 
+kernel than under the Gaussian kernel. While this may be a consequence of
+discretizing a continuous space, the resolution of the discretization did not
+influence the estimate of the migration rate (cf. Fig. \ref{fig:lapl-kernel-rate-estimates}).
+
+Each ancestor $u$'s location was estimated as $\arg\min_x F_u(x)$ and these
+estimates are shown in figures \ref{fig:gauss-kernel-ancestor-estimates} and 
+\ref{fig:lapl-kernel-ancestor-estimates}. Both the error and the error variance
+in location estimates increases for older ancestors, and the rate of increase
+with age is faster when migration through the landscape is high. 
+
+\subsection{Empirical application}
+
+We applied our method to a contemporary sample of 1070 georeferenced human
+genomes from the Human Genome Diversity Project using a dated tree sequence
+inferred for chromosome 20 by \citet{Wohns_etal_2022}. We created an equal 
+area discrete global grid \citep{Barnes_Sahr_2023} (cell spacing approximately 
+500 km) and allowed for migration between nearest neighbor grid cells. We
+chose not to weight the migration cost function by inverse branch length and
+assigned each ancestor $u$ a distribution over grid cells by normalizing the 
+parsimony weights $w_u(x) = \exp\bigl(-F_u(x) + \min_z F_u(z)\bigr)$.
+The analysis finds that the geographic regions with the oldest average ancestor
+age are concentrated in northeast Africa and in the Middle East, recapitulating
+the likely history of human migration out of Africa and across Asia and Europe 
+(Fig. \ref{fig:avg-ancestor-age}). These results broadly agree with 
+\citet{Wohns_etal_2022} analysis of the same dataset. By using a discrete global 
+grid of Earth's landmass, however, we are able to better incorporate geographic
+constraints on dispersal and avoid reconstructing ancestors in places they
+clearly did not live (e.g., the Indian Ocean).

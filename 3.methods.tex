@@ -281,20 +281,23 @@ of individuals living within a radius of $3\sigma$ from itself. A random
 location centered on the mother's location was then chosen for each offspring 
 by drawing from a dispersal kernel with a standard deviation of $\sigma$.
 
-We conducted simulations using either a Guassian dispersal kernel or a double
-exponential dispersal kernel and 7 different $\sigma$ levels that were equally
-spaced from 0.4\% to 4\% of the width of simulation landscape. The Guassian
-kernel emulates a Brownian motion, while the double exponential kernel emulates
-a Laplace motion, which generates more extreme displacements of offspring
-relative to Brownian motion.
+We conducted simulations using either a Gaussian dispersal kernel or a double
+exponential dispersal kernel and 7 different standard deviation levels ($\sigma$)
+that were equally spaced from 0.4\% to 4\% of the width of simulation landscape.
+The Gaussian kernel emulates a Brownian motion while the double exponential 
+kernel emulates a Laplace motion, which generates more extreme displacements of 
+offspring relative to Brownian motion.
 
 We conducted 10 replicate simulations for each $\sigma$ level under each 
 dispersal kernel. For all simulations, we set $R=1.1$ and $K=500$. Each
 simulation was terminated after $4K = 2000$ generations \gb{that might not be long enough to reach stationary behavior in a spatial simulation}, after which the
 recorded (simplified) tree sequence of extant individuals was saved for 
 analysis. For all simulations we evaluated the ability of genome-wide parsimony
-averages to accurately estimate migration rates and the locations of genetic 
-ancestors.
+averages to accurately estimate effective migration rates and the locations of 
+genetic ancestors. We defined effective migration rate ($\sigma_e$) to be the
+maximum likelihood estimate of $\sigma$ under each dispersal kernel assuming we
+had complete knowledge of the locations of all ancestral individuals in the
+tree sequence.
 
 Simulations conducted under the Gaussian dispersal kernel were analyzed using
 squared Euclidean distance weighted by inverse branch length as the transition

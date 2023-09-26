@@ -7,13 +7,15 @@ not recapitate these gene trees.
 
 In general, our estimates of the simulated migration rate were close to the 
 true rates (error was between X\% and X\%, with an overall mean of X\%).
-The migration rate statistic $\sigma_P$ showed a tendency to underestimate the
-true migration rate for all simulations (Figs. \ref{fig:gauss-kernel-rate-estimates}, 
-\ref{fig:lapl-kernel-rate-estimates}). The magnitude of downward bias 
-increased with increasing migration and was more pronounced under the Laplace 
-kernel than under the Gaussian kernel. While this may be a consequence of
-discretizing a continuous space, the resolution of the discretization did not
-influence the estimate of the migration rate (cf. Fig. \ref{fig:lapl-kernel-rate-estimates}).
+For simulations generated under a gaussian dispersal kernel, the migration
+rate statistic $\sigma_P$ showed a moderate tendency to underestimate the 
+effective migration rate, with the magnitude of downward bias increasing with 
+with increasing effective migration rate 
+(Fig. \ref{fig:gauss-kernel-rate-estimates}). For simulations generated under
+a double exponential kernel, the migration rate statistic overestimated the
+effective migration rate, with the magnitude of upward bias decreasing with 
+with increasing resolution of the discretization
+(Fig. \ref{fig:lapl-kernel-rate-estimates}).
 
 We were able to estimate ancestor locations with high accuracy in the recent past; 
 error in ancestral location inference increased with ancestor age.

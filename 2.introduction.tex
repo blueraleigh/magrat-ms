@@ -3,8 +3,11 @@ network recording the history and timing of coalescent and recombination
 events. This network -- the ancestral recombination graph (ARG) -- can be
 factored into a sequence of genealogical trees that record the coalescent 
 history of the sample for different genomic regions, within which no 
-genealogically-determinative recombination has occurred. The tree sequence, 
-while not in practice a lossless representation of the ARG, contains a wealth 
+genealogically-determinative recombination has occurred 
+\gb{once this is out as a preprint, Alex can cite it, and then once Alex's is out as a preprint, we can cite it upon submission, 
+and thus the serpent shall eat its own tail!}. 
+The tree sequence, 
+while not in practice a lossless representation of the ARG \gb{it's not lossless?}, contains a wealth 
 of population genetic information about the sample \citep{Ralph_etal_2020}, and
 recent advancements in the inference and storage of tree sequences have made 
 them a powerful tool for learning about population processes and historical 
@@ -16,14 +19,16 @@ formed by the dispersal and reproduction of individuals in a landscape. If we
 knew the pedigree and locations of ancestral individuals it would be a simple 
 matter to determine how movement patterns have varied over space and time. 
 Unfortunately, the pedigree and its geographic context are, in most cases, 
-unknown to us. From the geographic distribution of sampled genomes on the tree
-sequence, however, we can hope to learn about the locations and movements of 
+unknown to us. However, the pedigree is intrinsically shaped by the geography 
+of individuals \citep{Bradburd_Ralph_2019},
+so from the geographic distribution of sampled genomes on the tree
+sequence, we can hope to learn about the locations and movements of 
 genetic ancestors at different times in the past. The intuition is that most
 dispersal and reproduction is geographically constrained: nearby individuals 
-tend to be more closely related than far away individuals.  The spatial 
-locations of sampled genomes, together with the genealogies that relate them, 
-are therefore expected to be informative about the locations of ancestral 
-genomes, at least in the recent past \citep{Wakeley_1999, Wilkins_2004}.
+tend to be more closely related than far away individuals \citep{Wright_1943}.  
+The spatial locations of sampled genomes, together with the genealogies that 
+relate them, are therefore expected to be informative about the locations of 
+ancestral genomes, at least in the recent past \citep{Wakeley_1999, Wilkins_2004}.
 
 For a non-recombining sequence, simple statistics on the minimum number of
 migration events consistent with the gene tree and sample locations have

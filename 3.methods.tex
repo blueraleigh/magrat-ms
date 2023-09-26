@@ -3,11 +3,11 @@
 We first review generalized parsimony as it applies to a single gene tree
 \citep{Sankoff_1975, Sankoff_Rousseau_1975}. For each node $u$ we maintain
 three cost functions. The \textit{node cost} function $g_u(x)$ assigns a cost 
-to each geographic state $x$ that gives the minimum cost required to explain 
-the observed geographic states of all sample nodes whose most recent common 
-ancestor is $u$ when $u$ is in state  $x$. If $u$ is a sample node, we set 
+to each geographic state $x$ (when $u$ is in state $x$) that gives the minimum 
+cost required to explain the observed geographic states of all sample nodes 
+whose most recent common ancestor is $u$. If $u$ is a sample node, we set 
 $g_u(x) = 0$ if $x = x_u$ and $g_u(x) = \infty$ if $x \neq x_u$. When $u$ is 
-not a sample node $g_u$ is formed by the sum of the \textit{stem cost} 
+not a sample node, $g_u$ is formed by the sum of the \textit{stem cost} 
 functions of its children.
 
 The stem cost function for a node $u$ is given by
@@ -31,18 +31,18 @@ tree traversal. A second pre-order tree traversal can then be used to compute
 the \textit{final cost} functions for each node. The final cost $f_u(x)$
 gives the minimum cost required to explain the observed geographic states of
 \emph{all} sample nodes when $u$ is in state $x$. When $u$ is the root of the
-tree $f_u(x) = g_u(x)$. Otherwise, 
+tree, $f_u(x) = g_u(x)$. Otherwise, 
 %
 $f_u(x) = \min_z \bigl[ f_{\pi_u}(z) - h_u(z) + \Delta_u(z,x) + g_u(x) \bigr]$,
 %
 where $\pi_u$ represents the immediate ancestor of node $u$.
 
-To sample a most parsimonious dispersal history we first choose a state at the
+To sample a most parsimonious dispersal history, we first choose a state at the
 root of the tree that minimizes the final cost function. We then recurse through 
-the tree in a pre-order traversal and for each node $u$ we choose a state
+the tree in a pre-order traversal and, for each node $u$, we choose a state
 $x_u = \arg\min_x \bigl[\Delta_u(x_{\pi_u}, x) + g_u(x)\bigr]$. Depending on the
 nature of the geographic state space and cost function there may be multiple
-(sometimes many) most parsimonious dispersal histories. We note that the 
+(sometimes many) most parsimonious dispersal histories \gb{in that case, how do we choose?}. We note that the 
 minimum cost ancestor location assignments produced by a parsimony 
 reconstruction can be viewed as a maximum posterior probability reconstruction 
 when the cost function $\Delta_u$ is proportional to the negative logarithm of 
@@ -57,7 +57,7 @@ the lineage transition probability of a stochastic dispersal process
 
 In this section we describe how we use the succinct tree sequence encoding
 \citep{Kelleher_etal_2016} to efficiently compute node cost and stem cost 
-functions for each marginal genealogy. Under the coalescent with recombination 
+functions for each marginal genealogy. Under the coalescent with recombination, 
 nearby gene trees are highly correlated. Moving between adjacent marginal trees 
 typically requires only a small number of subtree-prune-and-regraft (SPR) 
 operations. By keeping an index of the edges involved in these SPR operations 
@@ -66,17 +66,17 @@ encoding allows us to efficiently maintain the state of parsimony calculations
 as we iterate over the marginal genealogies.
 
 A detailed description of the tree sequence data structure can be found in
-\citet{Kelleher_etal_2016}. For our purposes it suffices to know that
+\citet{Kelleher_etal_2016}. For our purposes, it suffices to know that
 relationships among all $N$ nodes in the tree sequence are recorded in the edge 
 table $E$. Each row in the edge table records an ancestor-descendant
 relationship, and the indices of nodes involved in that relationship can be 
 accessed as $E[k].\texttt{parent}$ and  $E[k].\texttt{child}$. The relationship 
-encoded by an edge applies to the half-open genomic between $E[k].\texttt{left}$ 
+encoded by an edge applies to the half-open genomic interval between $E[k].\texttt{left}$ 
 (inclusive) and $E[k].\texttt{right}$ (exclusive). As we move along the genome 
 from left to right, the index vectors $I$ and $O$ give the insertion and
 removal order of the edges needed to build each marginal gene tree topology 
 (recorded in the vector $\pi$). The following algorithm is based on
-the branch statistic algorithm that appears in \citep{Ralph_etal_2020} but
+the branch statistic algorithm that appears in \citet{Ralph_etal_2020} but
 differs in its treatment of sample weights and how they are propagated along
 a genealogy.
 
@@ -203,18 +203,18 @@ by their genomic span.
 \end{description}
 
 We begin in S1 by initializing the cost functions for each node to zero except in
-the case of sample nodes, where we set them to positive infinity for all states
-not equal to the observed state. We then set the parent of each node to minus
-one (signifying the null element) so that the initial state of the tree sequence
+the case of sample nodes, for which we set the cost function to positive infinity for all states
+not equal to the observed state. We then set the parent of each node to $-1$ 
+(signifying the null element) so that the initial state of the tree sequence
 is a forest of disconnected nodes. The average cost functions (denoted by the
-corresponding capital letters) are also initialized to zero as these will be
+corresponding capital letters) are also initialized to $0$ as these will be
 updated as we iterate over the tree sequence.
 
 The meat of the algorithm occurs in steps S4 and S5 of the edge removal loop
 and in steps S8 and S9 of the edge insertion loop. Removal of an edge from
 node $u$ to $v$ will alter the node and stem cost functions along the path from
 $u$ back to the root of the genealogy. Step S4 prepares for this by first
-substracting the stem costs of $u$ and $v$ from the node costs of their
+substracting \gb{is this a typo?} the stem costs of $u$ and $v$ from the node costs of their
 respective parents. In step S5, we walk back along the path from $u$'s parent to
 the root and recompute new stem costs and node costs given the updated node
 costs at the head of the path. Insertion of an edge from node $u$ to $v$ will 
@@ -226,10 +226,10 @@ S8, we walk back along the path from $u$'s parent to the root as before and
 recompute new stem costs and node costs given the updated node costs at the 
 head of the path.
 
-Upon reaching step S9 we have finished constructing the tree together with its
+Upon reaching step S9, we have finished constructing the tree together with its
 node cost and stem cost functions. We record the genomic span of the tree in the 
 variable $s$, which will be the weight applied to the current tree in the weighted
-average. In S10 we perform a preorder traversal of the newly constructed tree
+average. In S10, we perform a preorder traversal of the newly constructed tree
 and compute the final cost function for each node. At the same time, we 
 increment the total weight $s_u$ of each node by $s$ and update the weighted 
 averages $F_u(x)$ with the cost functions for the current tree. When we begin
@@ -242,7 +242,7 @@ Correctness of the algorithm requires that edges are removed in order of
 nondecreasing right genomic coordinate and decreasing time and that edges are
 inserted in order of nondecreasing left genomic coordinate and increasing time
 (time is measured backward from the present). We assume that the index vectors
-$I$ and $O$ are constructed to satisfy these conditions, and these assumptions 
+$I$ and $O$ are constructed to satisfy these conditions; these assumptions 
 form the basis of the conditional checks in steps S3 and S6 for determining
 when to exit the edge removal and insertion loops.
 
@@ -252,7 +252,7 @@ Implementation of the generalized parsimony algorithm detailed above depends on
 a choice of cost function $\Delta$, which in turn depends on the nature of the
 geographic state space.
 
-For a continuous state space we use the squared Euclidean distance as the 
+For a continuous state space, we use the squared Euclidean distance as the 
 transition cost, which leads to node, stem, and final costs that are quadratic 
 functions of the spatial locations. The parameters of these functions can be 
 computed in constant time as we traverse each genealogy \citep{Maddison_1991}.
@@ -272,10 +272,10 @@ $10^8$ basepairs and a per basepair recombination rate of $10^{-8}$. Individuals
 coexisted on a two-dimensional square plane with reflecting boundaries and a 
 side length of $50$ units. Population regulation occurred via a (Beverton-Holt) 
 density dependent fecundity effect: the number of offspring produced by an 
-individual in generation $t$ was Poisson distributed with a mean equal to 
+individual in generation $t$ was Poisson-distributed with a mean equal to 
 $\frac{R}{1 + \frac{N_t \times (R-1)}{K}}$, where $N_t$ is the size of the 
 population at generation $t$, $R$ is the population growth rate at low density, 
-and $K$ is the carrying capacity. During reproduction each individual 
+and $K$ is the carrying capacity. During reproduction, each individual 
 (the ``mother") chose a mate (the ``father") uniformly at random from the set 
 of individuals living within a radius of $3\sigma$ from itself. A random 
 location centered on the mother's location was then chosen for each offspring 
@@ -284,13 +284,13 @@ by drawing from a dispersal kernel with a standard deviation of $\sigma$.
 We conducted simulations using either a Guassian dispersal kernel or a double
 exponential dispersal kernel and 7 different $\sigma$ levels that were equally
 spaced from 0.4\% to 4\% of the width of simulation landscape. The Guassian
-kernel emulates a Brownian motion while the double exponential kernel emulates
+kernel emulates a Brownian motion, while the double exponential kernel emulates
 a Laplace motion, which generates more extreme displacements of offspring
 relative to Brownian motion.
 
 We conducted 10 replicate simulations for each $\sigma$ level under each 
-dispersal kernel. For all simulations we set $R=1.1$ and $K=500$. Each
-simulation was terminated after $4K = 2000$ generations, after which the
+dispersal kernel. For all simulations, we set $R=1.1$ and $K=500$. Each
+simulation was terminated after $4K = 2000$ generations \gb{that might not be long enough to reach stationary behavior in a spatial simulation}, after which the
 recorded (simplified) tree sequence of extant individuals was saved for 
 analysis. For all simulations we evaluated the ability of genome-wide parsimony
 averages to accurately estimate migration rates and the locations of genetic 
@@ -304,3 +304,5 @@ as the transition cost function. The Manhattan distance was calculated after
 discretizing sample locations to positions on a square lattice. To explore the
 effect of discretization, analyses were conducted at three levels of resolution: 
 a 25-by-25 grid, a 50-by-50 grid, and a 75-by-75 grid.
+
+\gb{do we do anything with nodes that show up across multiple marginal trees?}

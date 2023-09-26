@@ -43,7 +43,7 @@ average of posterior modes.
 
 \subsection{Limitations}
 
-We note that the approach we have described assumes that lineages disperse
+The approach we have described assumes that lineages disperse
 independently of one another and that the dispersal process is independent of
 the coalescent process between coalescent events in a reconstructed gene tree. 
 That is, a reconstruction depends only the transition cost function and on the 
@@ -58,5 +58,26 @@ respect to the geographic distribution of the samples, they should lead to
 higher migration rate estimates and increased uncertainty in the geographic
 placement of ancestors.
 
+\subsection{Future Directions}
 
-
+The ability to accurately infer the locations of ancestors in the tree sequence 
+(at least in the recent past) 
+opens exciting avenues of future research.
+Simply summarizing the georeferenced tree sequence has the potential 
+to yield valuable insights into the evolutionary and natural history of a population, 
+including identifying barriers to dispersal, 
+shifts in dispersal regimes (magnitude and/or direction) through time, 
+and geographic `source` and `sink` populations.
+A straightforward direction for extending our model would be to explicitly 
+incorporate some of these elements,
+for example, heterogeneous dispersal rates between different regions.
+As the transitions between different geographic states occur on an arbitrary network
+(generated, in the applications presented here, via geographic proximity), 
+we can easily incorporate different geographies; 
+for example, dispersal routes that connect far-flung regions, 
+which may be of interest when species occasionally experience 
+human-mediated dispersal.
+More broadly, the ability to study the geography of genealogies
+heralds an exciting growth in the ability of the field of population genetics 
+to shed light on population ecological processes governing the movement, 
+distribution, and density of individuals across space and through time. 

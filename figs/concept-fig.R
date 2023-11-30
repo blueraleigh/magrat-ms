@@ -71,7 +71,7 @@ mpr = function(x, y, parent, time, postorder, num_nodes) {
         final_cost = final.cost(
             node,x,y,parent,time,node_cost,stem_cost,final_cost)
     }
-    return (final_cost)
+    return (structure(final_cost, node_cost=node_cost, stem_cost=stem_cost))
 }
 
 

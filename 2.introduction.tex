@@ -1,31 +1,30 @@
 The ancestry of a sample of recombining genomes can be described by a complex
 network recording the history and timing of coalescent and recombination
-events. This network -- the ancestral recombination graph (ARG) -- can be
+events. This network -- an ancestral recombination graph (ARG) -- can be
 factored into a sequence of genealogical trees that record the coalescent 
-history of the sample for different genomic regions, within which no 
-genealogically-determinative recombination has occurred. The tree sequence, 
-while not in practice a lossless representation of the ARG, contains a wealth 
-of population genetic information about the sample \citep{Ralph_etal_2020}, and
-recent advancements in the inference and storage of tree sequences have made 
-them a powerful tool for learning about population processes and historical 
-events shaping patterns of genetic variation
-\citep{Anderson-Trocme_etal_2023, Kelleher_etal_2016, Kelleher_etal_2019}.
+history of the sample for the different non-recombinant genomic regions. The
+tree sequence contains a wealth of population genetic information about the sample 
+\citep{Ralph_etal_2020}, and recent advancements in the inference and storage 
+of tree sequences have made them a powerful tool for learning about population 
+processes and historical events shaping patterns of genetic variation
+\citep{Anderson-Trocme_etal_2023, Kelleher_etal_2016, Kelleher_etal_2019,
+Lewanski_etal_2023, Wong_etal_2023}.
 
-The gene trees that comprise a tree sequence are embedded within a pedigree
-formed by the dispersal and reproduction of individuals in a landscape. If we 
-knew the pedigree and locations of ancestral individuals it would be a simple 
-matter to determine how movement patterns have varied over space and time. 
-Unfortunately, the pedigree and its geographic context are, in most cases, 
-unknown to us. However, the pedigree is intrinsically shaped by the geography 
-of individuals \citep{Bradburd_Ralph_2019},
-so from the geographic distribution of sampled genomes on the tree
-sequence, we can hope to learn about the locations and movements of 
-genetic ancestors at different times in the past. The intuition is that most
-dispersal and reproduction is geographically constrained: nearby individuals 
-tend to be more closely related than far away individuals \citep{Wright_1943}.  
-The spatial locations of sampled genomes, together with the genealogies that 
-relate them, are therefore expected to be informative about the locations of 
-ancestral genomes, at least in the recent past \citep{Wakeley_1999, Wilkins_2004}.
+The gene trees (often called local trees) that comprise a tree sequence are
+embedded within a pedigree formed by the dispersal and reproduction of
+individuals in a landscape. If we knew the pedigree and locations of ancestral 
+individuals it would be a simple matter to determine how movement patterns have
+varied over space and time. Unfortunately, the pedigree and its geographic
+context are, in most cases, unknown to us. However, the pedigree is
+intrinsically shaped by the geography of individuals \citep{Bradburd_Ralph_2019},
+so from the geographic distribution of sampled genomes on a tree sequence we
+can learn about the locations and movements of genetic ancestors at different
+times in the past. The intuition is that most dispersal and reproduction is
+geographically constrained: nearby individuals tend to be more closely related
+than far away individuals \citep{Wright_1943}.  The spatial locations of sampled
+genomes, together with the genealogies that relate them, are therefore expected
+to be informative about the locations of ancestral genomes
+\citep{Wakeley_1999, Wilkins_2004}.
 
 For a non-recombining sequence, simple statistics on the minimum number of
 migration events consistent with the gene tree and sample locations have

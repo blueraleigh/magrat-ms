@@ -1,309 +1,131 @@
-\subsection{Overview}
+\subsection{Main approach: computing minimum migration fits to local trees}
 
-We first review generalized parsimony as it applies to a single gene tree
-\citep{Sankoff_1975, Sankoff_Rousseau_1975}. For each node $u$ we maintain
-three cost functions. The \textit{node cost} function $g_u(x)$ assigns a cost 
-to each geographic state $x$ (when $u$ is in state $x$) that gives the minimum 
-cost required to explain the observed geographic states of all sample nodes 
-whose most recent common ancestor is $u$. If $u$ is a sample node, we set 
-$g_u(x) = 0$ if $x = x_u$ and $g_u(x) = \infty$ if $x \neq x_u$. When $u$ is 
-not a sample node, $g_u$ is formed by the sum of the \textit{stem cost} 
-functions of its children.
+Given a set of sampled genomes with known locations and a tree sequence that
+relates the samples, our approach efficiently reconstructs the locations of 
+genetic ancestors using a minimum migration heuristic. Conceptually, our
+method may be thought of as proceeding in three steps
+(Fig. \ref{fig:concept-fig}).
 
-The stem cost function for a node $u$ is given by
-%
-$h_u(x) = \min_z \bigl[ \Delta_u(x, z) + g_u(z) \bigr]$.
-%
-The function $\Delta_u(x, z)$ assigns a cost to the transition from state $x$ to
-state $z$ over the branch leading to node $u$. Here, we assume that $\Delta_u$
-can be factored as:
-%
-$\Delta_u(x,z) = \phi(\tau_u) * \Delta(x,z)$,
-%
-where $\tau_u$ is the length of the branch leading to node $u$ and $\Delta$ is
-a time-independent transition cost function. Typical choices for the
-time-dependent component are $\phi(\tau_u) = \frac{1}{\tau_u}$ or 
-$\phi(\tau_u) = 1$, the latter making the whole cost function independent of
-branch lengths.
-
-The node cost and stem cost functions can be computed in a single post-order
-tree traversal. A second pre-order tree traversal can then be used to compute
-the \textit{final cost} functions for each node. The final cost $f_u(x)$
-gives the minimum cost required to explain the observed geographic states of
-\emph{all} sample nodes when $u$ is in state $x$. When $u$ is the root of the
-tree, $f_u(x) = g_u(x)$. Otherwise, 
-%
-$f_u(x) = \min_z \bigl[ f_{\pi_u}(z) - h_u(z) + \Delta_u(z,x) + g_u(x) \bigr]$,
-%
-where $\pi_u$ represents the immediate ancestor of node $u$.
-
-To sample a most parsimonious dispersal history, we first choose a state at the
-root of the tree that minimizes the final cost function. We then recurse through 
-the tree in a pre-order traversal and, for each node $u$, we choose a state
-$x_u = \arg\min_x \bigl[\Delta_u(x_{\pi_u}, x) + g_u(x)\bigr]$. Depending on the
-nature of the geographic state space and cost function there may be multiple
-(sometimes many) most parsimonious dispersal histories. We note that the 
-minimum cost ancestor location assignments produced by a parsimony 
-reconstruction can be viewed as a maximum posterior probability reconstruction 
-when the cost function $\Delta_u$ is proportional to the negative logarithm of 
-the lineage transition probability of a stochastic dispersal process 
-\citep{Maddison_1991}.
-
-%Alternatively, if we are not interested in only the most parsimonious histories 
-%we could instead choose a state for node $u$ with probability 
-%$\mathbb{P}(X_u = x | X_{\pi_u} = x_{\pi_u}) \propto \exp{\bigl[-\Delta_u(x_{\pi_u}, x) - g_u(x)\bigr]}$.
-
-\subsection{Algorithm}
-
-In this section we describe how we use the succinct tree sequence encoding
-\citep{Kelleher_etal_2016} to efficiently compute node cost and stem cost 
-functions for each marginal genealogy. Under the coalescent with recombination, 
-nearby gene trees are highly correlated. Moving between adjacent marginal trees 
-typically requires only a small number of subtree-prune-and-regraft (SPR) 
-operations. By keeping an index of the edges involved in these SPR operations 
-and the order in which they need to be applied, the succinct tree sequence 
-encoding allows us to efficiently maintain the state of parsimony calculations 
-as we iterate over the marginal genealogies.
-
-A detailed description of the tree sequence data structure can be found in
-\citet{Kelleher_etal_2016}. For our purposes, it suffices to know that
-relationships among all $N$ nodes in the tree sequence are recorded in the edge 
-table $E$. Each row in the edge table records an ancestor-descendant
-relationship, and the indices of nodes involved in that relationship can be 
-accessed as $E[k].\texttt{parent}$ and  $E[k].\texttt{child}$. The relationship 
-encoded by an edge applies to the half-open genomic interval between $E[k].\texttt{left}$ 
-(inclusive) and $E[k].\texttt{right}$ (exclusive). As we move along the genome 
-from left to right, the index vectors $I$ and $O$ give the insertion and
-removal order of the edges needed to build each marginal gene tree topology 
-(recorded in the vector $\pi$). The following algorithm is based on
-the branch statistic algorithm that appears in \citet{Ralph_etal_2020} but
-differs in its treatment of sample weights and how they are propagated along
-a genealogy.
-
-\subsubsection*{Algorithm P (generalized parsimony)}
-
-Given a set of georeferenced samples related by a tree sequence with length
-$L$, compute the genome-wide average final cost function $F_u(x)$ and the
-genome-wide average migration rate statistic $\sigma_P$. The function $F_u(x)$ 
-returns the average minimum migration cost required to explain the observed 
-geographic states of all sample nodes when $u$ is in state $x$, where the 
-average is taken over all marginal genealogies (weighted by their genomic span)
-where node $u$ appears. The statistic $\sigma_P$ is the average per-branch 
-migration cost in a most parsimonious migration history averaged over all
-marginal genealogies weighted by their genomic span.
-
-\begin{description}
-
-\item[S1.] [Initialization.]
-    For $0 \leq u < N$
-        set $\pi_u \leftarrow -1$,
-        $s_u \leftarrow 0$,
-        $g_u(x) \leftarrow 0$,
-        $F_u(x) \leftarrow 0$.
-        Then,
-        if $u$ is a sample node and $x \neq x_u$,
-            set $g_u(x) \leftarrow \infty$ and $F_u(x) \leftarrow \infty$
-
-    Finally,
-        set $j \leftarrow 0$,
-        $k \leftarrow 0$,
-        $\sigma_P \leftarrow 0$,
-        $t_l \leftarrow 0$,
-        $s_P \leftarrow 0$.
-
-\item[S2.] [Terminate.]
-    If $j = |E|$ terminate.
-
-\item[S3.] [Edge removal loop.]
-    If $k = |E|$ or $t_l \neq E[O_k].\texttt{right}$ go to S6.
-
-\item[S4.] [Remove edge.]
-    Set $u \leftarrow E[O_k].\texttt{parent}$,
-        $v \leftarrow E[O_k].\texttt{child}$,
-        $w \leftarrow \pi_u$, and
-        $k \leftarrow k + 1$.
-        Then,
-        if $w \neq -1$,
-            set $g_w(x) \leftarrow g_w(x) - h_u(x)$.
-        Finally,
-        set $g_u(x) \leftarrow g_u(x) - h_v(x)$,
-        $\pi_v = -1$,
-        $v \leftarrow u$,
-        $u \leftarrow w$.
-
-\item[S5.] [Update node and stem costs.]
-    While $u \neq -1$,
-        set $w \leftarrow \pi_u$ and
-        if $w \neq -1$
-            set $g_w(x) \leftarrow g_w(x) - h_u(x)$.
-        Then set
-        $h_v(x) \leftarrow \min_{z}\bigl[\Delta_v(x,z) + g_v(z)\bigr]$,
-        $g_u(x) \leftarrow g_u(x) + h_v(x)$,
-        $v \leftarrow u$, $u \leftarrow w$.
-    Afterward, go to S3.
-
-\item[S6.] [Edge insertion loop.]
-    If $j = |E|$ or $t_l \neq E[I_j].\texttt{left}$ go to S9.
-
-\item[S7.] [Insert edge.]
-    Set $u \leftarrow E[I_j].\texttt{parent}$,
-        $v \leftarrow E[I_j].\texttt{child}$,
-        $w \leftarrow \pi_u$, and
-        $j \leftarrow j + 1$.
-        Then,
-        if $w \neq -1$,
-            set $g_w(x) \leftarrow g_w(x) - h_u(x)$.
-        Then set
-        $h_v(x) \leftarrow \min_{z}\bigl[\Delta_v(x,z) + g_v(z)\bigr]$.
-        Finally,
-        set $g_u(x) \leftarrow g_u(x) + h_v(x)$,
-        $\pi_v = u$,
-        $v \leftarrow u$,
-        $u \leftarrow w$.
-
-\item[S8.] [Update node and stem costs.]
-    While $u \neq -1$,
-        set $w \leftarrow \pi_u$ and
-        if $w \neq -1$
-            set $g_w(x) \leftarrow g_w(x) - h_u(x)$.
-        Then
-        set $h_v(x) \leftarrow \min_{z}\bigl[\Delta_v(x,z) + g_v(z)\bigr]$,
-        $g_u(x) \leftarrow g_u(x) + h_v(x)$,
-        $v \leftarrow u$, $u \leftarrow w$.
-    Afterward, go to S6.
-
-\item[S9.] [Genomic span of tree.]
-    Set $t_r \leftarrow L$.
-    If $j < |E|$ set
-        $t_r \leftarrow \min\bigl(t_r, E[I_j].\texttt{left}\bigr)$.
-    Then,
-    if $k < |E|$ set
-        $t_r \leftarrow \min\bigl(t_r, E[O_k].\texttt{right}\bigr)$.
-    Set $s \leftarrow t_r - t_l$.
-
-\item[S10.] [Update average migration costs.]
-    Set $\sigma \leftarrow 0$, $n \leftarrow 0$, $s_P \leftarrow s + s_P$.
-    Then visit each node $u$ in a pre-order traversal and set
-    $s_u \leftarrow s_u + s$.
-    If $\pi_u = -1$ set
-        $f_u(x) \leftarrow g_u(x)$ and set
-        $\sigma \leftarrow \sigma + \min_z f_u(z)$;
-    otherwise, set 
-        $f_u(x) \leftarrow \min_z \bigl[ f_{\pi_u}(z) - h_u(z) + \Delta_u(z,x) + g_u(x) \bigr]$
-        and set $n \leftarrow n + 1$.
-    Then, set
-        $F_u(x) \leftarrow F_u(x) + s \times \frac{f_u(x) - F_u(x)}{s_u}$.
-
-\item[S11.] [Update average migration rate.]
-    Set $\sigma_P \leftarrow \sigma_P + s \times \frac{\sigma/n - \sigma_P}{s_P}$.
-
-\item[S12.] [Tree loop tail.]
-    Go to S2.
-
-\end{description}
-
-We begin in S1 by initializing the cost functions for each node to zero except in
-the case of sample nodes, for which we set the cost function to positive infinity for all states
-not equal to the observed state. We then set the parent of each node to $-1$ 
-(signifying the null element) so that the initial state of the tree sequence
-is a forest of disconnected nodes. The average cost functions (denoted by the
-corresponding capital letters) are also initialized to $0$ as these will be
-updated as we iterate over the tree sequence.
-
-The meat of the algorithm occurs in steps S4 and S5 of the edge removal loop
-and in steps S8 and S9 of the edge insertion loop. Removal of an edge from
-node $u$ to $v$ will alter the node and stem cost functions along the path from
-$u$ back to the root of the genealogy. Step S4 prepares for this by first
-subtracting the stem costs of $u$ and $v$ from the node costs of their
-respective parents. In step S5, we walk back along the path from $u$'s parent to
-the root and recompute new stem costs and node costs given the updated node
-costs at the head of the path. Insertion of an edge from node $u$ to $v$ will 
-similarly alter the node and stem cost functions along the path from
-$u$ back to the root of the genealogy. Step S7 prepares for this by first
-substracting the stem cost of $u$ from the node cost of its parent and then
-computing the stem cost of $v$ and adding it to the node cost of $u$. In step 
-S8, we walk back along the path from $u$'s parent to the root as before and 
-recompute new stem costs and node costs given the updated node costs at the 
-head of the path.
-
-Upon reaching step S9, we have finished constructing the tree together with its
-node cost and stem cost functions. We record the genomic span of the tree in the 
-variable $s$, which will be the weight applied to the current tree in the weighted
-average. In S10, we perform a preorder traversal of the newly constructed tree
-and compute the final cost function for each node. At the same time, we 
-increment the total weight $s_u$ of each node by $s$ and update the weighted 
-averages $F_u(x)$ with the cost functions for the current tree. When we begin
-the traversal at the root(s) of the tree we also record the minimum migration 
-cost $\sigma$ needed to explain the sample distribution. We use this cost in
-S11, together with the number $n$ of edges in the tree, to update the weighted
-average migration rate statistic $\sigma_P$.
-
-Correctness of the algorithm requires that edges are removed in order of 
-nondecreasing right genomic coordinate and decreasing time and that edges are
-inserted in order of nondecreasing left genomic coordinate and increasing time
-(time is measured backward from the present). We assume that the index vectors
-$I$ and $O$ are constructed to satisfy these conditions; these assumptions 
-form the basis of the conditional checks in steps S3 and S6 for determining
-when to exit the edge removal and insertion loops.
-
-\subsection{Implementation}
-
-Implementation of the generalized parsimony algorithm detailed above depends on
-a choice of cost function $\Delta$, which in turn depends on the nature of the
-geographic state space.
-
-For a continuous state space, we use the squared Euclidean distance as the 
-transition cost, which leads to node, stem, and final costs that are quadratic 
-functions of the spatial locations. The parameters of these functions can be 
-computed in constant time as we traverse each genealogy \citep{Maddison_1991}.
-
-For a finite set of geographic locations we require a matrix specifying the 
-cost of transitions between all pairs of geographic states. In that case, the
-node, stem, and final costs are discrete functions on the set of geographic
-locations, and computing their values scales with the square of the number of
+In the first step, a minimum migration cost function $f_{uk}$ is fitted to each
+node $u$ in each local tree $k$ in which $u$ appears using the generalized
+parsimony algorithm \citep{Sankoff_1975, Sankoff_Rousseau_1975}. For each 
+spatial location, $f_{uk}(x)$ then returns the smallest sum of migration costs
+between all ancestor-descendant pairs in local tree $k$ that can explain the
+sampled locations when $u$ is at location $x$. We assume migration cost is a function
+of migration distance and provide three cost function implementations. In each 
+of these three cases we allow migration distances to optionally be weighted by 
+inverse branch length. For a continuous state space, we use either the squared
+Euclidean distance or the Manhattan distance. Squared Euclidean distance leads
+to cost functions that are convex quadratic functions of the spatial locations
+\citep{Maddison_1991}; Manhattan distance, to convex piecewise linear functions
+\citep{Csuros_2008}. For a finite set of geographic locations, a square matrix 
+with arbitrary transition costs between all pairs of geographic states leads to
+minimum migration costs that are discrete functions defined on the set of
 geographic locations \citep{Clemente_etal_2009}.
 
-\subsection{Simulation study}
+In the second step, we form a new function $F_u$ by taking a weighted average 
+of $f_{uk}$ over the local trees in which $u$ appears, using the genomic spans
+of each local tree as weights. We interpret $F_u$ as the minimum migration cost
+of an average ancestral base pair. In other words, if one were to take each
+base pair that inherits from $u$ and fit a minimum migration cost function to its
+coalescent history, the average of those would look like $F_u$. In the Appendix
+we present a detailed description of the algorithm we use for computing
+$F_u$ from the local tree fits $f_{uk}$. Considerable computational savings
+can be achieved by using the succinct tree sequence encoding
+\citep{Kelleher_etal_2016}, which allows us to efficiently maintain
+the state of parsimony calculations as we iterate over local trees. As detailed
+in the Appendix, the local tree fits also allow us to compute an estimate of
+effective migration rate, which we define as the mean lineage migration cost 
+of an average base pair. That is, if one were to take the coalescent history of
+each sampled base pair and compute the mean the per-branch migration cost in a
+most parsimonious migration history, the average of those -- taken over all
+sampled base pairs -- would equal the effective migration rate.
+
+Finally, we locate each ancestor by finding the spatial location $x$ where
+$F_u(x)$ is smallest. A constrained (rather than global) minimization of $F_u$
+could also be used to locate ancestors if some spatial locations are known to
+be uninhabitable. Although we do not pursue this possibility in the current
+study, uncertainty in ancestor locations could be explored by sampling from
+$\exp\bigl(-\lambda F_u(x)\bigr)$, where $\lambda$ is a tuning parameter that
+controls how strongly deviations from the spatial location that minimizes the
+overall migration cost are penalized.
+
+\subsection{Simulation study: testing ancestor location accuracy}
 
 We tested performance of the method using spatially explicit forward-time 
 simulations in SLiM v4.0.1 \citep{Haller_Messer_2023}. Simulated individuals
 were semelparous and hermaphroditic and diploid for a single chromosome with 
-$10^8$ basepairs and a per basepair recombination rate of $10^{-8}$. Individuals
-coexisted on a two-dimensional square plane with reflecting boundaries and a 
-side length of $50$ units. Population regulation occurred via a (Beverton-Holt) 
-density dependent fecundity effect: the number of offspring produced by an 
-individual in generation $t$ was Poisson-distributed with a mean equal to 
-$\frac{R}{1 + \frac{N_t \times (R-1)}{K}}$, where $N_t$ is the size of the 
-population at generation $t$, $R$ is the population growth rate at low density, 
-and $K$ is the carrying capacity. During reproduction, each individual 
-(the ``mother") chose a mate (the ``father") uniformly at random from the set 
-of individuals living within a radius of $3\sigma$ from itself. A random 
-location centered on the mother's location was then chosen for each offspring 
-by drawing from a dispersal kernel with a standard deviation of $\sigma$.
+$10^8$ basepairs and a recombination rate of $10^{-8}$ per basepair per
+generation. Individuals coexisted on a two-dimensional square plane with
+reflecting boundaries and a side length of $1000\sigma$ units, where $\sigma$ 
+was the standard deviation of the dispersal kernel.
+
+Population regulation occurred via density dependent effects on fecundity and
+survival. The number of offspring produced by a focal individual in generation
+$t$ was Poisson-distributed with a mean equal to 
+$\frac{R}{1 + \frac{N_t \times (R-1)}{K}}$,
+where $N_t$ is the local population density in a circle of radius $3\sigma$ 
+around the focal individual at generation $t$, $R$ is the population growth 
+rate at low density, and $K$ is the local carrying capacity density. During 
+reproduction, each individual (the ``mother") chose a mate (the ``father") 
+uniformly at random from the set of individuals living within a radius of 
+$3\sigma$ from itself. A random location centered on the mother's location was 
+then chosen for each offspring by drawing from a dispersal kernel with a 
+standard deviation of $\sigma$. Each offspring produced in generation $t$ 
+survived to reproduce in generation $t+1$ with probability 
+$\min(1.0, \frac{K}{O_t})$, where $O_t$ is the local population density in a 
+circle of radius $3\sigma$ around the focal offspring in generation $t$.
 
 We conducted simulations using either a Gaussian dispersal kernel or a double
-exponential dispersal kernel and 7 different $\sigma$ levels that were equally
-spaced from 0.4\% to 4\% of the width of simulation landscape. The Gaussian
-kernel emulates a Brownian motion while the double exponential kernel emulates
-a Laplace motion, which generates more extreme displacements of offspring
-relative to Brownian motion.
+exponential dispersal kernel and 10 different $\sigma$ levels that were equally
+spaced from 0.2 to 2.0. The Gaussian kernel emulates a Brownian motion while
+the double exponential kernel emulates a Laplace motion, which generates more
+extreme displacements of offspring relative to Brownian motion.
 
 We conducted 10 replicate simulations for each $\sigma$ level under each 
-dispersal kernel. For all simulations, we set $R=1.1$ and $K=500$. Each
-simulation was terminated after $4K = 2000$ generations, after which the
-recorded (simplified) tree sequence of extant individuals was saved for 
-analysis. For all simulations we evaluated the ability of genome-wide parsimony
-averages to accurately estimate effective migration rates and the locations of 
-genetic ancestors. We defined effective migration rate ($\sigma_e$) to be the
-maximum likelihood estimate of $\sigma$ under each dispersal kernel assuming we
-had complete knowledge of the locations of all ancestral individuals in the
-tree sequence.
+dispersal kernel. For all simulations, we set $R=2$ and $K=\frac{30}{(3\sigma)^2\pi}$.
+Each simulation was initiated from a randomly located founder population of 30
+individuals that was allowed to grow and disperse for 10000 generations, 
+after which the simulation was terminated and the recorded (simplified) tree
+sequence of extant individuals was saved for analysis.
 
 Simulations conducted under the Gaussian dispersal kernel were analyzed using
 squared Euclidean distance weighted by inverse branch length as the transition
 cost function. Simulations conducted under the double exponential dispersal
 kernel were analyzed using Manhattan distance weighted by inverse branch length
-as the transition cost function. The Manhattan distance was calculated after 
-discretizing sample locations to positions on a square lattice. To explore the
-effect of discretization, analyses were conducted at three levels of resolution: 
-a 25-by-25 grid, a 50-by-50 grid, and a 75-by-75 grid.
+as the transition cost function. For all simulations we evaluated our ability
+to accurately estimate effective migration rates and the locations of 
+genetic ancestors. We defined the true effective migration rate ($\sigma_e$) to 
+be the maximum likelihood estimate of $\sigma$ under each dispersal kernel
+assuming we had complete knowledge of the locations of all ancestral individuals
+in the tree sequence.
+
+\subsection{Empirical example: reconstructing human migration out of Africa}
+
+We applied our method to a contemporary sample of 1070 georeferenced human
+genomes from the Human Genome Diversity Project using the dated tree sequences
+inferred by \citet{Wohns_etal_2022}. Geographic coordinates of sampled genomes
+were first converted to Cartesian coordinates on the surface of an authalic
+sphere, after which we computed $F_u$ for each node in the empirical tree sequence
+using squared Euclidean distance weighted by inverse branch length as the
+migration cost function. For each point in time we can reconstruct the locations
+of genetic ancestors as follows. Let $E(t)$ denote the set of lineages existing
+at time $t$ and let $A$ denote a set of locations those lineages can potentially
+inhabit. Then, for each edge $e = (u, v)$ in $E(t)$ we form 
+$F_e = (1 - \frac{t_u - t}{t_u - t_v})F_u + \frac{t_u - t}{t_u - t_v}F_v$
+by linear interpolation between ancestor $u$ and descendant $v$ and locate
+the lineage at time $t$ as $\arg\min_{a \in A} F_e(a)$.
+
+Using this procedure we created a set of spatial-temporal bins to explore
+historical geographic patterns in human genetic ancestry over the last 
+one-half million years. Equal-interval time bins spanning 100 generations 
+(or 2500 years using a 25 year generation time) extended from the present
+to 20000 generations in the past. An equal area discrete global grid 
+\citep{Barnes_Sahr_2023} (cell spacing approximately 450 km) intersected with
+Earth's landmass provided a set of habitable locations which were subsequently
+mapped to 15 broad geographic regions for the purposes of ancestry
+assignment.
+
+
+
+

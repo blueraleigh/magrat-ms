@@ -1,56 +1,86 @@
-The ancestry of a sample of recombining genomes can be described by a complex
-network recording the history and timing of coalescent and recombination
-events. This network -- an ancestral recombination graph (ARG) -- can be
-factored into a sequence of genealogical trees that record the coalescent 
-history of the sample for the different non-recombinant genomic regions. The
-tree sequence contains a wealth of population genetic information about the sample 
-\citep{Ralph_etal_2020}, and recent advancements in the inference and storage 
-of tree sequences have made them a powerful tool for learning about population 
-processes and historical events shaping patterns of genetic variation
-\citep{Anderson-Trocme_etal_2023, Kelleher_etal_2016, Kelleher_etal_2019,
-Lewanski_etal_2023, Wong_etal_2023}.
+The genomes of a sample of present-day individuals existed at every point in the past, 
+scattered across geographic space and contained within the ancestors 
+from whom they will eventually inherit their genetic material.
+The way those ancestors moved across space through history 
+determines spatial patterns of genetic relatedness in the present \citep{Bradburd_Ralph_2019}.
+Understanding these patterns is vital both for 
+the identification of the genomic basis of phenotypic variation 
+and for 
+knowledge of the demographic history of a species.
+In humans, 
+complex, spatial patterns of genetic variation and relatedness 
+are often summarized with crude, discrete labels, 
+such as ``genetic ancestry group" \citep{Coop_2022}, 
+which, although loosely based on geographic history, 
+sacrifice accuracy in the name of expedience and utility.
+However, if we knew the locations of those ancestors, 
+we could much more precisely report the geographic ancestry 
+of a set of modern-day samples through time.
+Moreover, we could learn about the history of dispersal, 
+identifying major population movements, 
+demographic events, and 
+barriers to migration.
 
-The gene trees (often called local trees) that comprise a tree sequence are
-embedded within a pedigree formed by the dispersal and reproduction of
-individuals in a landscape. If we knew the pedigree and locations of ancestral 
-individuals it would be a simple matter to determine how movement patterns have
-varied over space and time. Unfortunately, the pedigree and its geographic
-context are, in most cases, unknown to us. However, the pedigree is
-intrinsically shaped by the geography of individuals \citep{Bradburd_Ralph_2019},
-so from the geographic distribution of sampled genomes on a tree sequence we
-can learn about the locations and movements of genetic ancestors at different
-times in the past. The intuition is that most dispersal and reproduction is
-geographically constrained: nearby individuals tend to be more closely related
-than far away individuals \citep{Wright_1943}.  The spatial locations of sampled
-genomes, together with the genealogies that relate them, are therefore expected
-to be informative about the locations of ancestral genomes
-\citep{Wakeley_1999, Wilkins_2004}.
+Here, we present a method for efficiently computing 
+minimum migration statistics over genome-wide genealogies, 
+allowing us to infer the geographic locations of shared ancestors 
+of a modern, georeferenced sample.
+Our method 
 
-For a non-recombining sequence, simple statistics on the minimum number of
-migration events consistent with the gene tree and sample locations have
-proven useful for estimating migration rates and other important population
-genetic quantities, such as isolation by distance and Wright's neighborhood
-size \citep{Slatkin_Maddison_1989, Slatkin_Maddison_1990}. For a recombining
-sequence this approach is complicated by the fact that the gene tree on which
-the minimum migration statistic is computed necessarily represents some sort of
-average of the gene trees of the nonrecombined segments. The work of 
-\citet{Hudson_etal_1992} has shown that migration rate estimates based on
-minimum migration statistics are surprisingly robust in the presence of
-recombination -- often outperforming estimates based on $F_{ST}$ -- but 
-suggested a better approach would be to average minimum migration 
-statistics across gene trees estimated for each nonrecombined segment.
-
-Our main contribution in this paper is to show how we can use recent
-advancements in the storage of tree sequences to efficiently compute and
-average minimum migration statistics over genome-wide genealogies. Specifically,
-we demonstrate how the generalized parsimony algorithm
-\citep{Sankoff_1975, Sankoff_Rousseau_1975} can be used with the succinct tree 
-sequence encoding \citep{Kelleher_etal_2016} to estimate migration rates and 
-locations of genetic ancestors in continuous and discrete geographic space.
-We test this method using spatially explicit forward-time simulations. We then 
-apply this method to a continental dataset of humans. Our work adds to a
-growing body of research using tree sequences for inference in spatial 
-population genomics.
+%
+%The ancestry of a sample of recombining genomes can be described by a complex
+%network recording the history and timing of coalescent and recombination
+%events. This network -- an ancestral recombination graph (ARG) -- can be
+%factored into a sequence of genealogical trees that record the coalescent 
+%history of the sample for the different non-recombinant genomic regions. The
+%tree sequence contains a wealth of population genetic information about the sample 
+%\citep{Ralph_etal_2020}, and recent advancements in the inference and storage 
+%of tree sequences have made them a powerful tool for learning about population 
+%processes and historical events shaping patterns of genetic variation
+%\citep{Anderson-Trocme_etal_2023, Kelleher_etal_2016, Kelleher_etal_2019,
+%Lewanski_etal_2023, Wong_etal_2023}.
+%
+%The gene trees (often called local trees) that comprise a tree sequence are
+%embedded within a pedigree formed by the dispersal and reproduction of
+%individuals in a landscape. If we knew the pedigree and locations of ancestral 
+%individuals it would be a simple matter to determine how movement patterns have
+%varied over space and time. Unfortunately, the pedigree and its geographic
+%context are, in most cases, unknown to us. However, the pedigree is
+%intrinsically shaped by the geography of individuals \citep{Bradburd_Ralph_2019},
+%so from the geographic distribution of sampled genomes on a tree sequence we
+%can learn about the locations and movements of genetic ancestors at different
+%times in the past. The intuition is that most dispersal and reproduction is
+%geographically constrained: nearby individuals tend to be more closely related
+%than far away individuals \citep{Wright_1943}.  The spatial locations of sampled
+%genomes, together with the genealogies that relate them, are therefore expected
+%to be informative about the locations of ancestral genomes
+%\citep{Wakeley_1999, Wilkins_2004}.
+%
+%For a non-recombining sequence, simple statistics on the minimum number of
+%migration events consistent with the gene tree and sample locations have
+%proven useful for estimating migration rates and other important population
+%genetic quantities, such as isolation by distance and Wright's neighborhood
+%size \citep{Slatkin_Maddison_1989, Slatkin_Maddison_1990}. For a recombining
+%sequence this approach is complicated by the fact that the gene tree on which
+%the minimum migration statistic is computed necessarily represents some sort of
+%average of the gene trees of the nonrecombined segments. The work of 
+%\citet{Hudson_etal_1992} has shown that migration rate estimates based on
+%minimum migration statistics are surprisingly robust in the presence of
+%recombination -- often outperforming estimates based on $F_{ST}$ -- but 
+%suggested a better approach would be to average minimum migration 
+%statistics across gene trees estimated for each nonrecombined segment.
+%
+%Our main contribution in this paper is to show how we can use recent
+%advancements in the storage of tree sequences to efficiently compute and
+%average minimum migration statistics over genome-wide genealogies. Specifically,
+%we demonstrate how the generalized parsimony algorithm
+%\citep{Sankoff_1975, Sankoff_Rousseau_1975} can be used with the succinct tree 
+%sequence encoding \citep{Kelleher_etal_2016} to estimate migration rates and 
+%locations of genetic ancestors in continuous and discrete geographic space.
+%We test this method using spatially explicit forward-time simulations. We then 
+%apply this method to a continental dataset of humans. Our work adds to a
+%growing body of research using tree sequences for inference in spatial 
+%population genomics.
 
 
 

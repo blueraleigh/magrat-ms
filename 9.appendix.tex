@@ -76,7 +76,7 @@ accessed as $E[k].\texttt{parent}$ and  $E[k].\texttt{child}$. The relationship
 encoded by an edge applies to the half-open genomic interval between $E[k].\texttt{left}$ 
 (inclusive) and $E[k].\texttt{right}$ (exclusive). As we move along the genome 
 from left to right, the index vectors $I$ and $O$ give the insertion and
-removal order of the edges needed to build each marginal gene tree topology 
+removal order of the edges needed to build each local gene tree topology 
 (recorded in the vector $\pi$). The following algorithm is based on
 the branch statistic algorithm that appears in \citet{Ralph_etal_2020} but
 differs in its treatment of sample weights and how they are propagated along

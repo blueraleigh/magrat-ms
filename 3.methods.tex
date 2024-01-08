@@ -27,7 +27,7 @@ In the second step, we form a new function $F_u$ by taking a weighted average
 of $f_{uk}$ over the local trees in which $u$ appears, using the genomic spans
 of each local tree as weights. We interpret $F_u$ as the minimum migration cost
 of an average ancestral base pair. In other words, if one were to take each
-base pair that inherits from $u$ and fit a minimum migration cost function to its
+sampled base pair that inherits from $u$ and fit a minimum migration cost function to its
 coalescent history, the average of those would look like $F_u$. In the Appendix
 we present a detailed description of the algorithm we use for computing
 $F_u$ from the local tree fits $f_{uk}$. Considerable computational savings
@@ -49,6 +49,47 @@ study, uncertainty in ancestor locations could be explored by sampling from
 $\exp\bigl(-\lambda F_u(x)\bigr)$, where $\lambda$ is a tuning parameter that
 controls how strongly deviations from the spatial location that minimizes the
 overall migration cost are penalized.
+
+\subsection{Spatiotemporal ancestry coefficients}
+
+We use our ancestor location estimates to define two spatially and
+temporally explicit ancestry coefficients as follows. In the first case,
+consider a subset $i$ of the sampled genomes. Define $A_i(t)$ to be the total
+amount of sample material in the subset that is descended from ancestral
+material at a point in time $t$ in the past. Define $A_{ik}(t)$ to be the total
+amount of sample material descended from ancestral material in geographic
+state $k$ at time $t$ in the past. We then define the spatiotemporal ancestry
+coefficient for subset $i$ as $q_{ik}(t) = \frac{A_{ik}(t)}{A_i(t)}$, the fraction of
+sample material that is descended from ancestral material in geographic
+state $k$ at time $t$ in the past. Thus, if we were to pool all sample material
+in subset $i$ whose coalescent history extended at least $t$ time units into the
+past, $q_{ik}(t)$ is the probabily that we can trace the coalescent history of a
+randomly selected base pair from that pool to an ancestral base pair in
+geographic state $k$ at time $t$ in the past.
+
+Next, define $A_i(t_l,t_r)$ to be the total amount of sample material in the
+subset that is descended from ancestral material present during an interval in
+time $[t_l,t_r)$ in the past. Define $A_{ijk}(t_l,t_r)$ to be the total amount
+of sample material descended from ancestral material that migrated from
+geographic state $j$ to state $k$ during an interval in time $[t_l, t_r)$ in
+the past (where $j$ is not equal to $k$). We then define the spatiotemporal
+ancestry flux coefficient for subset $i$ as 
+$q_{ijk}(t_l, t_r) = \frac{A_{ijk}(t_l, t_r)}{A_i(t_l, t_r)}$. Thus, if we were
+to pool all sample material in subset $i$ whose coalescent history extended at
+least $[t_l,t_r)$ time units into the past, $q_{ijk}(t_l,t_r)$ is the probabily
+that we can trace the coalescent history of a randomly selected base pair from
+that pool to an ancestral base pair that migrated from geographic state $j$ to
+state $k$ during the interval $[t_l,t_r)$ in the past.
+
+As defined, our spatiotemporal ancestry coefficients require knowing the geographic
+locations of ancestral lineages at arbitrary points in time in the past but our
+minimum migration location estimates (i.e., $\arg\min_x F_u(x)$) are available
+only for the two endpoints of an ancestral lineage. By using the migration cost
+function and conditioning on these endpoint states, however, we can sample a
+minimum cost migration history for each lineage and locate ancestors at
+arbitrary points in time. Further details about this procedure are presented in
+the appendix.
+
 
 \subsection{Simulation study: testing ancestor location accuracy}
 
